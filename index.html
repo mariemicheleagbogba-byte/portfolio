@@ -882,37 +882,49 @@
     /* ===================================================
        VIDEO PLAYER
     =================================================== */
-    .vid-wrap { position:relative; width:100%; height:100%; background:#0a0a08; }
-    .vid-wrap video {
-      width:100%; height:100%; object-fit:cover; display:block;
+    /* === YouTube Facade === */
+    .yt-facade {
+      position:relative; width:100%; height:100%;
+      cursor:pointer; overflow:hidden; background:#0a0a08;
     }
-    .vid-overlay {
+    .yt-thumb {
+      width:100%; height:100%;
+      object-fit:cover; object-position:center;
+      transition:transform .4s var(--ease), opacity .3s;
+    }
+    .yt-facade:hover .yt-thumb { transform:scale(1.03); opacity:.85; }
+    .yt-overlay {
       position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center; z-index:5;
-    }
-    .vid-play-btn {
-      width:52px; height:52px; border-radius:50%;
-      background:rgba(255,255,255,.18); backdrop-filter:blur(8px);
-      border:1.5px solid rgba(255,255,255,.45);
       display:flex; align-items:center; justify-content:center;
-      color:#fff; font-size:1rem;
-      transition:background var(--t), border-color var(--t), transform var(--t);
+      flex-direction:column; gap:.875rem;
     }
-    .vid-play-btn:hover { background:var(--accent); border-color:var(--accent); transform:scale(1.1); }
-    .vid-play-btn.playing { background:rgba(0,0,0,.3); }
-    .vid-eps {
+    .yt-play-btn {
+      width:62px; height:62px; border-radius:50%;
+      background:rgba(255,255,255,.15); backdrop-filter:blur(10px);
+      border:1.5px solid rgba(255,255,255,.4);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-size:1.2rem;
+      transition:background var(--t), transform var(--t), border-color var(--t);
+    }
+    .yt-facade:hover .yt-play-btn {
+      background:var(--accent); border-color:var(--accent); transform:scale(1.1);
+    }
+    .yt-eps {
       position:absolute; bottom:.75rem; left:.875rem;
-      display:flex; gap:.375rem; z-index:10;
+      display:flex; gap:.375rem; z-index:5;
     }
-    .vid-ep {
+    .yt-ep {
       padding:.22rem .65rem; border-radius:2px;
       font-size:.65rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
-      background:rgba(0,0,0,.45); color:rgba(255,255,255,.65);
+      background:rgba(0,0,0,.5); color:rgba(255,255,255,.7);
       border:1px solid rgba(255,255,255,.2);
       transition:all .25s;
     }
-    .vid-ep.on { background:var(--accent); color:#fff; border-color:var(--accent); }
-    .vid-ep:hover { color:#fff; background:rgba(255,255,255,.2); }
+    .yt-ep.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .yt-ep:hover { color:#fff; background:rgba(255,255,255,.2); }
+    .yt-frame {
+      width:100%; height:100%; border:none; display:block;
+    }
   </style>
 </head>
 <body>
@@ -1247,18 +1259,22 @@
       <!-- P1: Chouette Awards -->
       <div class="pc pc-lg rv" data-cat="video">
         <div class="pc-img">
-          <div class="vid-wrap">
-            <video id="v-chouette" src="assets/chouette-awards/ep-1.mp4"
-                   preload="metadata" playsinline loop></video>
-            <div class="vid-overlay">
-              <button class="vid-play-btn" id="vbtn-chouette" aria-label="Lire la vidéo">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          <!-- YouTube facade — Chouette Awards -->
+          <div class="yt-facade" id="ytFacade"
+               data-ep1="HTUkaZIEcVA" data-ep2="5uG19ecs_TA" data-ep3="0LE3BeGJ0Zg"
+               data-active="HTUkaZIEcVA">
+            <img class="yt-thumb" src="https://img.youtube.com/vi/HTUkaZIEcVA/maxresdefault.jpg"
+                 alt="Chouette Awards — Court-Métrage Épisode 1"
+                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\'/%3E'">
+            <div class="yt-overlay">
+              <button class="yt-play-btn" aria-label="Lire sur YouTube">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
               </button>
             </div>
-            <div class="vid-eps">
-              <button class="vid-ep on" data-src="assets/chouette-awards/ep-1.mp4">Ép. 1</button>
-              <button class="vid-ep"    data-src="assets/chouette-awards/ep-2.mp4">Ép. 2</button>
-              <button class="vid-ep"    data-src="assets/chouette-awards/ep-3.mp4">Ép. 3</button>
+            <div class="yt-eps">
+              <button class="yt-ep on" data-ep="ep1">Ép. 1</button>
+              <button class="yt-ep"    data-ep="ep2">Ép. 2</button>
+              <button class="yt-ep"    data-ep="ep3">Ép. 3</button>
             </div>
           </div>
           <div class="pc-over"></div>
@@ -1757,51 +1773,41 @@ document.querySelectorAll('.carousel').forEach(car => {
   startAuto();
 });
 
-/* ---- VIDEO PLAYER ---- */
-const SVG_PLAY  = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>`;
-const SVG_PAUSE = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+/* ---- YOUTUBE FACADE PLAYER ---- */
+const ytFacade = document.getElementById('ytFacade');
+if (ytFacade) {
+  const thumb = ytFacade.querySelector('.yt-thumb');
+  const eps   = ytFacade.querySelectorAll('.yt-ep');
 
-document.querySelectorAll('.vid-wrap').forEach(wrap => {
-  const vid = wrap.querySelector('video');
-  const btn = wrap.querySelector('.vid-play-btn');
-  const eps = wrap.querySelectorAll('.vid-ep');
-
-  btn.addEventListener('click', () => {
-    if (vid.paused) {
-      vid.play();
-      btn.classList.add('playing');
-      btn.innerHTML = SVG_PAUSE;
-    } else {
-      vid.pause();
-      btn.classList.remove('playing');
-      btn.innerHTML = SVG_PLAY;
-    }
-  });
-
-  vid.addEventListener('ended', () => {
-    btn.classList.remove('playing');
-    btn.innerHTML = SVG_PLAY;
-  });
-
+  // Changer d'épisode (met à jour la thumbnail sans lancer la vidéo)
   eps.forEach(ep => {
-    ep.addEventListener('click', () => {
-      const wasPlaying = !vid.paused;
-      vid.pause();
-      vid.src = ep.getAttribute('data-src');
-      vid.load();
-      eps.forEach(e => e.classList.remove('on'));
+    ep.addEventListener('click', e => {
+      e.stopPropagation();
+      eps.forEach(b => b.classList.remove('on'));
       ep.classList.add('on');
-      if (wasPlaying) {
-        vid.play();
-        btn.classList.add('playing');
-        btn.innerHTML = SVG_PAUSE;
-      } else {
-        btn.classList.remove('playing');
-        btn.innerHTML = SVG_PLAY;
-      }
+      const key = ep.getAttribute('data-ep'); // 'ep1', 'ep2', 'ep3'
+      const id  = ytFacade.getAttribute('data-' + key);
+      ytFacade.setAttribute('data-active', id);
+      thumb.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
     });
   });
-});
+
+  // Clic sur play → remplace le facade par l'iframe YouTube
+  ytFacade.querySelector('.yt-play-btn').addEventListener('click', () => {
+    const id = ytFacade.getAttribute('data-active');
+    if (!id || id.startsWith('YT_ID')) {
+      // IDs pas encore renseignés — afficher un message
+      alert('Vidéos bientôt disponibles ! Upload YouTube en cours.');
+      return;
+    }
+    const iframe = document.createElement('iframe');
+    iframe.src   = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+    iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
+    iframe.allowFullscreen = true;
+    iframe.className = 'yt-frame';
+    ytFacade.replaceWith(iframe);
+  });
+}
 </script>
 </body>
 </html>
